@@ -8,12 +8,13 @@ const Card = () => {
   const [sellToken, setSellToken] = useState("");
   const [buyToken, setBuyToken] = useState("");
   const [price, setPrice] = useState("");
+  console.log(price)
+  
 
   useEffect(() => {
     if (sellToken && buyToken && inputOne) {
-      const sellAmount = parseFloat(inputOne) * Math.pow(10, 18);
 
-      const url = `https://api.0x.org/swap/v1/price?buyToken=${buyToken}&sellToken=${sellToken}&sellAmount=${sellAmount}`;
+      const url = `https://api.0x.org/swap/v1/price?buyToken=${buyToken}&sellToken=${sellToken}&sellAmount=${inputOne}`;
 
       axios
         .get(url, {
@@ -21,8 +22,9 @@ const Card = () => {
         })
         .then((response) => {
           console.log("API Response:", response.data);
-          setPrice(response.data.price);
+          setPrice(response.data.buyAmount);
         })
+        
         .catch((error) => {
           console.error("API Error:", error);
         });
@@ -41,6 +43,7 @@ const Card = () => {
     setPrice("");
   };
 
+  
   return (
     <div className="card bg-base-100 w-96 shadow-xl mt-[100px] ml-[800px] bg-black rounded-[30px]">
       <figure className="px-10 pt-10">
@@ -51,7 +54,7 @@ const Card = () => {
         </div>
         <br />
       </figure>
-
+      
       <div className="card-body">
         <div className="container">
           <div className="card-title text-xs ml-[8px] text-red-600">Sell</div>
@@ -81,6 +84,7 @@ const Card = () => {
         <div className="container mt-2 mb-2 text-white">
           <input
             type="number"
+            min={0}
             placeholder="0.0"
             className="input input-bordered input-secondary w-full max-w-xs"
             onChange={(e) => setInputOne(e.target.value)}
@@ -89,7 +93,7 @@ const Card = () => {
         </div>
       </div>
 
-      <div className="card-body">
+      <div className="card-body ">
         <div className="container">
           <div className="card-title text-xs ml-[8px] text-green-400">Buy</div>
           <div className="flex justify-between">
