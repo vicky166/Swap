@@ -1,5 +1,4 @@
 "use client"
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import '@rainbow-me/rainbowkit/styles.css';
@@ -10,7 +9,7 @@ import { QueryClientProvider, QueryClient, } from "@tanstack/react-query";
 import { polygonAmoy, sepolia } from "viem/chains";
 
 const inter = Inter({ subsets: ["latin"] });
-const config = getDefaultConfig({ appName: 'My RainbowKit App', projectId: 'YOUR_PROJECT_ID', chains: [sepolia], ssr: true, });
+const config = getDefaultConfig({ appName: 'My RainbowKit App', projectId: 'YOUR_PROJECT_ID', chains: [mainnet], ssr: true, });
 const queryClient = new QueryClient();
 
 

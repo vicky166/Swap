@@ -1,5 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useAccount, useSendTransaction } from 'wagmi';
+import { ethers } from "ethers";
+import { Address } from "viem";
+import { walletClient } from "@/utils/config";
+
+
+
+
 import axios from "axios";
 
 const Card = () => {
@@ -8,28 +16,56 @@ const Card = () => {
   const [sellToken, setSellToken] = useState("");
   const [buyToken, setBuyToken] = useState("");
   const [price, setPrice] = useState("");
-  console.log(price)
-  
+  const { isConnected, address } = useAccount();
 
-  useEffect(() => {
-    if (sellToken && buyToken && inputOne) {
-
-      const url = `https://api.0x.org/swap/v1/price?buyToken=${buyToken}&sellToken=${sellToken}&sellAmount=${inputOne}`;
-
-      axios
-        .get(url, {
+  async function getPrice() {
+    if (!isConnected) {
+      console.log("Connect your account");
+    } else if (sellToken && buyToken && inputOne) {
+      const url = `https://api.0x.org/swap/v1/price?sellAmount=${inputOne}&
+buyToken=${buyToken}&sellToken=
+${sellToken}`
+      try {
+        const response = await axios.get(url, {
           headers: { "0x-api-key": "f8a0dc95-a1b2-424b-9f91-839ea88e3e43" },
-        })
-        .then((response) => {
-          console.log("API Response:", response.data);
-          setPrice(response.data.buyAmount);
-        })
-        
-        .catch((error) => {
-          console.error("API Error:", error);
         });
+        console.log(response)
+        setPrice(response.data.buyAmount);
+      } catch (err) {
+        console.log("get price", err);
+      }
     }
-  }, [sellToken, buyToken, inputOne]);
+  }
+
+
+  async function swapTokens() {
+    if (!isConnected) {
+      console.log("Connect your account");
+    } else if (sellToken && buyToken && inputOne && price) {
+      const url = `https://api.0x.org/swap/v1/quote?buyToken=${buyToken}&sellToken=${sellToken}&sellAmount=${inputOne}`;
+      try {
+        const response = await axios.get(url, {
+          headers: { "0x-api-key": "f8a0dc95-a1b2-424b-9f91-839ea88e3e43" },
+        });
+        const { to, data, value } = response.data;
+        const amountInWei = ethers.parseUnits(inputOne, 'ether');
+        const hash = await walletClient.sendTransaction({
+          account: address as Address,
+          to: to,
+          value: amountInWei,
+          data
+        })
+      } catch (err) {
+        console.log("swaptoken", err);
+      }
+    }
+  }
+
+
+  useEffect(()=>{
+    getPrice()
+    
+  },[sellToken,buyToken,inputOne])
 
   const clearSellToken = () => {
     setSellToken("");
@@ -43,25 +79,38 @@ const Card = () => {
     setPrice("");
   };
 
-  
+  const handleSwap = () => {
+    setSellToken((prevSellToken) => {
+      const newSellToken = buyToken;
+      setBuyToken(prevSellToken);
+      return newSellToken;
+    });
+
+    setInputOne((prevInputOne) => {
+      const newInputOne = inputSec;
+      setInputSec(prevInputOne);
+      return newInputOne;
+    });
+  };
+
   return (
-    <div className="card bg-base-100 w-96 shadow-xl mt-[100px] ml-[800px] bg-black rounded-[30px]">
-      <figure className="px-10 pt-10">
-        <div className="justify-self-start ml-[10px] mt-[-25px]">
+    <div className="card bg-base-100 w-full max-w-lg mx-auto shadow-xl mt-8 bg-black rounded-xl md:mt-20">
+      <figure className="px-4 pt-4 md:px-10 md:pt-10">
+        <div className="flex justify-start gap-2">
           <div className="badge bg-black text-white border-black">Market</div>
           <button className="badge bg-black text-white border-black">Limit</button>
           <button className="badge bg-black text-white border-black">Cross Chain</button>
         </div>
         <br />
       </figure>
-      
+
       <div className="card-body">
         <div className="container">
-          <div className="card-title text-xs ml-[8px] text-red-600">Sell</div>
-          <div className="flex justify-between">
-            <div className="dropdown dropdown-left dropdown-end">
+          <div className="card-title text-xs text-red-600 md:text-sm">Sell</div>
+          <div className="flex justify-between items-center">
+            <div className="dropdown w-1/2">
               <select
-                className="select w-full max-w-xs text-white"
+                className="select w-full text-white bg-black border-gray-600"
                 onChange={(e) => setSellToken(e.target.value)}
                 value={sellToken}
               >
@@ -75,31 +124,41 @@ const Card = () => {
             </div>
 
             <div>
-              <button className="btn btn-sm mt-3 bg-black text-white" onClick={clearSellToken}>
+              <button
+                className="btn btn-sm bg-black text-white"
+                onClick={clearSellToken}
+              >
                 Clear
               </button>
             </div>
           </div>
         </div>
-        <div className="container mt-2 mb-2 text-white">
+        <div className="container mt-2 mb-2">
           <input
             type="number"
             min={0}
             placeholder="0.0"
-            className="input input-bordered input-secondary w-full max-w-xs"
+            className="input input-bordered w-full text-white bg-black"
             onChange={(e) => setInputOne(e.target.value)}
             value={inputOne}
           />
         </div>
       </div>
+      <div className="flex justify-center">
+        <label className="swap">
+          <input type="checkbox" onChange={handleSwap} />
+          <div className="swap-on">Swap Up</div>
+          <div className="swap-off">Swap Down</div>
+        </label>
+      </div>
 
-      <div className="card-body ">
+      <div className="card-body">
         <div className="container">
-          <div className="card-title text-xs ml-[8px] text-green-400">Buy</div>
-          <div className="flex justify-between">
-            <div className="dropdown dropdown-left dropdown-end">
+          <div className="card-title text-xs text-green-400 md:text-sm">Buy</div>
+          <div className="flex justify-between items-center">
+            <div className="dropdown w-1/2">
               <select
-                className="select w-full max-w-xs text-white"
+                className="select w-full text-white bg-black border-gray-600"
                 onChange={(e) => setBuyToken(e.target.value)}
                 value={buyToken}
               >
@@ -113,22 +172,25 @@ const Card = () => {
             </div>
 
             <div>
-              <button className="btn btn-sm mt-3 bg-black text-white" onClick={clearBuyToken}>
+              <button
+                className="btn btn-sm bg-black text-white"
+                onClick={clearBuyToken}
+              >
                 Clear
               </button>
             </div>
           </div>
         </div>
 
-        <div className="container mt-2 mb-2 text-blue-600">
-          <div className="input input-bordered input-secondary w-full max-w-xs">
+        <div className="container mt-2 mb-2">
+          <div className="input input-bordered w-full text-white bg-black">
             {price ? `Price: ${price}` : "Fetching price..."}
           </div>
         </div>
 
-        <div className="card-actions">
-          <button className="btn btn-active ml-[90px] rounded-lg text-white">
-            Connect Wallet
+        <div className="card-actions flex justify-center">
+        <button className="btn btn-sm mt-3 mb-3" onClick={swapTokens}>
+            SWAP Token
           </button>
         </div>
       </div>
