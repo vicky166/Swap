@@ -4,10 +4,6 @@ import { useAccount, useSendTransaction } from 'wagmi';
 import { ethers } from "ethers";
 import { Address } from "viem";
 import { walletClient } from "@/utils/config";
-
-
-
-
 import axios from "axios";
 
 const Card = () => {
@@ -62,10 +58,10 @@ ${sellToken}`
   }
 
 
-  useEffect(()=>{
+  useEffect(() => {
     getPrice()
-    
-  },[sellToken,buyToken,inputOne])
+
+  }, [sellToken, buyToken, inputOne])
 
   const clearSellToken = () => {
     setSellToken("");
@@ -189,7 +185,7 @@ ${sellToken}`
         </div>
 
         <div className="card-actions flex justify-center">
-        <button className="btn btn-sm mt-3 mb-3" onClick={swapTokens}>
+          <button className="btn btn-sm mt-3 mb-3" onClick={swapTokens}>
             SWAP Token
           </button>
         </div>
